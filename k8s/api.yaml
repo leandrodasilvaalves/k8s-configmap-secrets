@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pedelogo-catalog-api-deployment
+spec:
+  selector:
+    matchLabels:
+      app: pedelogo-catalog-api
+  template:
+    metadata:
+      labels:
+        app: pedelogo-catalog-api
+    spec:
+      containers:
+      - name: pedelogo-catalog-api
+        image: leandroalves86/pedelogo-catalogo-api:v1
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:        
+        - containerPort: 80
+        - containerPort: 443
+        envFrom:
+          - configMapRef:
+              name: api-config
+        env:        
+        - name: "Mongo__User"
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret          
+              key: MONGO_INITDB_ROOT_USERNAME
+        - name: "Mongo__Password"
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: MONGO_INITDB_ROOT_PASSWORD
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: pedelogo-catalog-api-service
+spec:
+  selector:
+    app: pedelogo-catalog-api
+  ports:
+  - port: 80 
+    name: http       
+    protocol: TCP
+    targetPort: 80
+  - port: 443
+    name: https
+    protocol: TCP
+    targetPort: 443
+  type: LoadBalancer
+
